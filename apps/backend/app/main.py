@@ -1,29 +1,21 @@
-import os
-
 from fastapi import FastAPI
-import supabase
-from app.api.routes import tests
-from app.models.userModel import User
-from app.config.supabase import load_dotenv
-
-load_dotenv()
-
-supabase = supabase.create_client(
-    supabase_url=os.getenv("SUPABASE_URL"),
-    supabase_key=os.getenv("SUPABASE_KEY")
-)
+from fastapi.middleware.cors import CORSMiddleware
+from app.services.auth_service import router as auth_router
 
 app = FastAPI()
 
-@app.get("/users")
-def get_users():
+# Allow React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Vite frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    response = (
-        supabase
-        .table("users")
-        .select("*")
-        .execute()
-    )
+app.include_router(auth_router, prefix="/api/auth")
 
-    return response.data
 
+@app.get("/")
+def root():
+    return {"message": "API running"}
