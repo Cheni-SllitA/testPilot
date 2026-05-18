@@ -76,3 +76,4 @@ def login(user: LoginUser):
             "email": db_user["email"]
         }
     }
+
