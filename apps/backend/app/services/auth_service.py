@@ -68,12 +68,21 @@ def login(user: LoginUser):
     if not valid_password:
         raise HTTPException(status_code=401, detail="Invalid password")
 
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+    
+    
     return {
         "message": "Login successful",
         "user": {
             "id": db_user["id"],
             "name": db_user["name"],
             "email": db_user["email"]
-        }
+        },
+        "access_token":"token",
+        "token_type" : "bearer"
     }
 
