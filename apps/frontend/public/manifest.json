@@ -1,14 +1,28 @@
 {
-    "manifest_version": 3,
-    "name": "TestPilot",
-    "version": "1.0.0",
-    "description": "A simple Chrome extension built with React and Vite.",
-    "permissions": [
-        "activeTab",
-        "scripting",
-        "tabs"
-    ],
-    "action": {
-        "default_popup": "index.html"
+  "manifest_version": 3,
+  "name": "TestPilot",
+  "version": "1.0",
+
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "windows",
+    "storage",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "action": {
+    "default_popup": "index.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
     }
+  ]
 }
