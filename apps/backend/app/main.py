@@ -8,7 +8,10 @@ app = FastAPI()
 # Allow React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite frontend
+    allow_origins=[
+        "http://localhost:5173",
+        "chrome-extension://dhjeljpfkoiokbapnkbkbkanbbjbdkmf",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
