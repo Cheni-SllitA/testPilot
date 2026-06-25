@@ -5,7 +5,7 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-def generate_ai_response(prompt: str):
+def generate_ai_response(prompt: str, url: str, title: str, html: str) -> str:
     completion = client.chat.completions.create(
         model="qwen/qwen3-32b",
         messages=[

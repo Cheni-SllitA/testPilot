@@ -6,9 +6,10 @@ router = APIRouter()
 
 @router.post("/generate")
 async def generate(request: AIRequest):
-    response = generate_ai_response(request.prompt)
-
-    return {
-        "success": True,
-        "response": response
-    }
+    response_text = generate_ai_response(
+        prompt=request.prompt,
+        url=request.url,
+        title=request.title,
+        html=request.html
+    )
+    return {"result": response_text}

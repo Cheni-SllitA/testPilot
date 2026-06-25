@@ -1,11 +1,7 @@
 import { useState } from "react";
 
-import Header from "../components/common/Header";
 import ScopeBadges from "../components/testing/ScopeBadges";
 import ResultList from "../components/results/ResultList";
-
-
-import { MOCK_TESTS } from "../constants/mockTests";
 import { downloadPageHTML } from "../services/chromeService";
 import Navbar from "../components/common/Navbar";
 
@@ -14,7 +10,7 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
-  const [results, setResults] = useState([]);
+  const [result, setResult] = useState("");
 
   const handleRun = async () => {
     if (!prompt.trim() || running) return;
@@ -22,11 +18,11 @@ export default function Home() {
     try {
       setRunning(true);
       setDone(false);
-      setResults([]);
+
 
       const pageData = await downloadPageHTML();
 
-      console.log(pageData);
+      console.log("Page Data:", pageData);
 
       const response = await fetch(
         "http://localhost:8000/api/ai/generate",
@@ -37,14 +33,19 @@ export default function Home() {
           },
           body: JSON.stringify({
             prompt,
-            ...pageData,
+            url: pageData.url,
+            title: pageData.title,
+            html: pageData.html,
           }),
         }
       );
 
       const data = await response.json();
 
-      setResults(data.results || []);
+      console.log("API Response:", data);
+
+      setResult(data.result);
+
       setDone(true);
     } catch (error) {
       console.error("Test run failed:", error);
@@ -199,8 +200,8 @@ export default function Home() {
             {/* Session Status */}
             <div className="mt-6 rounded-lg border border-stone-200 bg-stone-50 p-4">
 
-              <p className="text-sm font-medium text-stone-700">
-                Status
+              <p className="mt-3 text-sm text-stone-500">
+                Status: {done ? "Done" : "—"}
               </p>
 
               <p className="mt-1 text-lg font-semibold text-stone-900">
@@ -212,7 +213,7 @@ export default function Home() {
               </p>
 
               <p className="mt-3 text-sm text-stone-500">
-                Generated Tests: {results.length}
+                Generated Tests: {done ? "1" : "0"}
               </p>
 
             </div>
@@ -220,25 +221,14 @@ export default function Home() {
 
 
             {/* Results */}
-            {results.length > 0 && (
-
+            {result && (
               <div className="mt-6 border-t border-stone-200 pt-6">
-
-                <h2 className="text-lg font-semibold text-stone-900">
-                  Results
-                </h2>
-
-                <p className="text-sm text-stone-500 mb-4">
-                  AI-generated testing output
-                </p>
-
-                <ResultList
-                  results={results}
-                  running={running}
-                />
-
+                <h2 className="text-lg font-semibold text-stone-900">AI Response</h2>
+                <p className="text-sm text-stone-500 mb-4">AI-generated testing output</p>
+                <pre className="mt-2 rounded-lg bg-stone-100 border border-stone-200 p-4 text-sm text-stone-700 overflow-auto whitespace-pre-wrap">
+                  {result}
+                </pre>
               </div>
-
             )}
 
           </div>
