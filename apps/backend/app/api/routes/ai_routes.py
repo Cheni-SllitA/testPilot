@@ -8,7 +8,7 @@ router = APIRouter()
 async def generate(request: AIRequest):
     response_text = generate_ai_response(
         prompt=request.prompt,
-        url=request.url,
+        #url=request.url,
         title=request.title,
         html=request.html
     )
