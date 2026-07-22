@@ -11,6 +11,7 @@ export default function Home() {
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
   const [result, setResult] = useState("");
+  const [report, setReport] = useState(null);
 
   const handleRun = async () => {
     if (!prompt.trim() || running) return;
@@ -18,6 +19,7 @@ export default function Home() {
     try {
       setRunning(true);
       setDone(false);
+      setReport(null);
 
 
       const pageData = await downloadPageHTML();
@@ -40,11 +42,28 @@ export default function Home() {
         }
       );
 
-      const data = await response.json();
+      if (!response.ok) {
+        // Error responses (413 too large, 422 validation) are still JSON.
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `Request failed with status ${response.status}`);
+      }
 
-      console.log("API Response:", data);
+      // Test results travel in the X-Test-Report header (JSON).
+      const reportHeader = response.headers.get("X-Test-Report");
+      const reportData = reportHeader ? JSON.parse(reportHeader) : null;
+      console.log("Test report:", reportData);
+      setReport(reportData);
 
-      setResult(data.result);
+      // The response body is the final HTML test report — download it.
+      const reportHtml = await response.text();
+      setResult(reportHtml);
+
+      const blob = new Blob([reportHtml], { type: "text/html" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "test_report.html";
+      link.click();
+      URL.revokeObjectURL(link.href);
 
       setDone(true);
     } catch (error) {
@@ -220,14 +239,56 @@ export default function Home() {
 
 
 
-            {/* Results */}
+            {/* Test Report */}
+            {report && (
+              <div className="mt-6 border-t border-stone-200 pt-6">
+                <h2 className="text-lg font-semibold text-stone-900">Test Report</h2>
+                <p className="text-sm text-stone-500 mb-4">
+                  Status: {report.status} · Score: {report.score}/100 ·{" "}
+                  {report.summary.passed}/{report.summary.total} tests passed
+                </p>
+
+                {report.issues.length > 0 && (
+                  <ul className="space-y-2">
+                    {report.issues.map((issue, i) => (
+                      <li
+                        key={i}
+                        className="rounded-lg border border-stone-200 bg-stone-50 p-3"
+                      >
+                        <p className="text-sm font-medium text-stone-800">
+                          <span className="mr-2 inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700">
+                            {issue.severity}
+                          </span>
+                          {issue.title}
+                        </p>
+                        {issue.description && (
+                          <p className="mt-1 text-xs text-stone-500 whitespace-pre-wrap">
+                            {issue.description}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Full report */}
             {result && (
               <div className="mt-6 border-t border-stone-200 pt-6">
-                <h2 className="text-lg font-semibold text-stone-900">AI Response</h2>
-                <p className="text-sm text-stone-500 mb-4">AI-generated testing output</p>
-                <pre className="mt-2 rounded-lg bg-stone-100 border border-stone-200 p-4 text-sm text-stone-700 overflow-auto whitespace-pre-wrap">
-                  {result}
-                </pre>
+                <h2 className="text-lg font-semibold text-stone-900">Full Report</h2>
+                <p className="text-sm text-stone-500 mb-4">
+                  The report was downloaded as <code>test_report.html</code>.
+                </p>
+                <button
+                  onClick={() => {
+                    const blob = new Blob([result], { type: "text/html" });
+                    window.open(URL.createObjectURL(blob), "_blank");
+                  }}
+                  className="rounded-lg border border-stone-300 bg-stone-100 px-4 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-200"
+                >
+                  Open Full Report
+                </button>
               </div>
             )}
 
